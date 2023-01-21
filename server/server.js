@@ -1,51 +1,56 @@
-const express = require('express');
-const path = require('path');
-const bodyParser = require('body-parser');
-const mongoose = require('mongoose');
+const express = require("express");
+const app = express();
+const mongoose = require('mongoose')
+const MongoStore = require("connect-mongo");
+const logger = require("morgan");
+const passport = require("passport");
+const session = require("express-session");
+const flash = require("express-flash");
+const cors = require("cors");
+const connectDB = require("./config/database");
+const authRoutes = require("./routes/auth")
 
+require("dotenv").config({ path: "./server/config/.env" });
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost/symptom-tracker', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+// passport config
+require("./config/passport")(passport);
 
-// Middleware
+connectDB()
+
+app.use(
+	cors({
+		origin: "http://localhost:3000",
+		credentials: true,
+	})
+);
+
+//Body Parsing
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// Routes
-app.use('/api/users', require('./routes/users'));
-app.use('/api/posts', require('./routes/posts'));
-app.use('/api/symptom-history', require('./routes/symptom-history'));
+//Logging
+app.use(logger("dev"));
 
-app.get('/about', (req, res) => {
-  res.send('About page');
-});
+// Setup Sessions - stored in MongoDB
+app.use(
+	session({
+		secret: "keyboard cat",
+		resave: false,
+		saveUninitialized: false,
+		store: new MongoStore({ mongoUrl: process.env.DB_STRING }),
+	})
+);
 
-app.get('/dashboard', (req, res) => {
-  res.send('Dashboard page');
-});
+// Passport middleware
+app.use(passport.initialize());
+app.use(passport.session());
 
-app.get('/login', (req, res) => {
-  res.send('Login page');
-});
+//Use flash messages for errors, info, ect...
+app.use(flash());
 
-app.get('/signup', (req, res) => {
-  res.send('Signup page');
-});
+app.use('/auth', authRoutes)
 
-app.get('/symptom-history', (req, res) => {
-  res.send('Symptom history page');
-});
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-  res.status(err.status || 500).json({
-    error: {
-      message: err.message || 'Oops! Something went wrong.'
-    }
-  });
-});
+const PORT = process.env.PORT || 3000;
 
 // Start the server
 const port = process.env.PORT || 5000;

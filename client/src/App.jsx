@@ -1,23 +1,30 @@
-import React from 'react';
-import { BrowserRouter as Router, Route } from 'react-router-dom';
-import About from './components/About';
-import Dashboard from './components/Dashboard';
-import Login from './components/Login';
-import Signup from './components/Signup';
-import SymptomHistory from './components/SymptomHistory';
+import { useContext } from "react";
+import { Route, Routes } from "react-router-dom";
+import Homepage from "./Components/Homepage";
+import Login from "./Components/Login";
+import Signup from "./Components/Signup";
+import Context, { UserContext } from "./Context";
 
-const App = () => {
-  return (
-    <Router>
-       <Switch>
-      <Route path="/" exact component={About} />
-      <Route path="/dashboard" component={Dashboard} />
-      <Route path="/login" component={Login} />
-      <Route path="/signup" component={Signup} />
-      <Route path="/symptom-history" component={SymptomHistory} />
-      </Switch>
-    </Router>
-  );
-};
+function App() {
+	const userObject = useContext(UserContext);
+	return (
+			<Routes>
+				<Route
+					path='/'
+					element={<Homepage />}
+				/>
+				<Route
+					path='/login'
+					element={<Login />}
+				/>
+				<Route
+					path='/signup'
+					element={<Signup />}
+				/>
+			</Routes>
+	);
+}
+
+export default App;
 
 export default App;
